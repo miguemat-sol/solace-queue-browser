@@ -42,7 +42,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
   const [calendarVisible, setCalendarVisible] = useState(false);
 
   // Browse Start Points
-  const [basicMode, setBasicMode] = useState(false);
+  const [basicMode, setBasicMode] = useState(true);
   const [dateTime, setDateTime] = useState(null);
   const [msgId, setMsgId] = useState('');
 
@@ -110,6 +110,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
 
   const handleBrowseModeChange = ({ value: mode }) => {
     setBrowseMode(mode);
+    raiseOnChange(browseMode);
   };
 
   const handleCalendarVisibleChangle = async () => {

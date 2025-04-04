@@ -178,7 +178,7 @@ class BaseBrowser {
     return msgMetaData;
   }
 
-  async replayToTempQueue({ sourceName, replayFrom, count = this.pageSize}) {
+  async replayToTempQueue({ sourceName, replayFrom, count = this.pageSize }) {
     await this.session.connect();
 
     const tempQueueName = `#QB/${sourceName}/${Date.now()}`;
@@ -205,26 +205,48 @@ class BaseBrowser {
       )))
     );
 
-    // Trigger Replay
-    messageConsumer.connect();
-    messageConsumer.disconnect();
-
+    const receivedMessages = [];
+  
+    messageConsumer.on(solace.MessageConsumerEventName.MESSAGE, message => {
+      receivedMessages.push(message);
+      if (receivedMessages.length >= count) {
+        done = true;
+      }
+    });
+  
+    await messageConsumer.connect();
+  
+    const timeout = 500;
+    const interval = 100;
+    const startTime = Date.now();
+    let done = false;
+  
+    while (!done && (Date.now() - startTime) < timeout) {
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+  
+    await messageConsumer.disconnect();
+  
     const queueBrowser = this.session.createQueueBrowser({ queueDescriptor });
     const [, messages] = await Promise.all([
       queueBrowser.connect(),
       queueBrowser.readMessages(count, 500)
     ]);
-    queueBrowser.disconnect();
-
+    await queueBrowser.disconnect();
+  
     return {
       messages,
       tempQueueName,
-      cleanupReplay: () => {
-        this.session.deprovisionEndpoint(queueDescriptor);
-        this.session.disconnect();
+      cleanupReplay: async () => {
+        try {
+          await this.session.deprovisionEndpoint(queueDescriptor);
+          await this.session.disconnect();
+        } catch (err) {
+          console.warn("⚠️ Error cleaning replay:", err.message);
+        }
       }
     };
-  }
+  }  
 
   async getQueueReplayFrom({ messageId }) {
     try {
@@ -241,10 +263,15 @@ class BaseBrowser {
 
       const { data: msgMetaData } = await this.sempClient
         .getMsgVpnReplayLogMsgs(this.vpn, this.replayLogName, { cursor, count: 2 });
-      const [, nextOldestMessage] = msgMetaData;
-      return ({
-        afterMsg: nextOldestMessage.replicationGroupMsgId
-      });
+      if (msgMetaData.length >= 2) {
+        const [, nextOldestMessage] = msgMetaData;
+        return ({
+          afterMsg: nextOldestMessage.replicationGroupMsgId
+        });
+      } else {
+        console.warn(`[getQueueReplayFrom] msgMetaData has less than 2 elements for messageId: ${messageId}`);
+        return {};
+      }
     } catch (ex) {
       console.warn('Unable to find a suitable RGMID to start from. Will replay from beginning of time.', ex);
       return {};
