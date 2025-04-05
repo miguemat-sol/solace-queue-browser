@@ -110,7 +110,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
 
   const handleBrowseModeChange = ({ value: mode }) => {
     setBrowseMode(mode);
-    raiseOnChange(browseMode);
+    raiseOnChange(mode);
   };
 
   const handleCalendarVisibleChangle = async () => {
