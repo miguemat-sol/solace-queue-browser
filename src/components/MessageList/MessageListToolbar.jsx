@@ -140,7 +140,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
   useEffect(() => {
     const interval = setInterval(() => {
       handleRefreshClick();
-    }, 5 * 60 * 1000); // refresh every 5 minutes
+    }, 30 * 1000); // refresh every 30 seconds
   
     return () => clearInterval(interval); // clean if component is unmount
   }, []);  
