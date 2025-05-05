@@ -42,7 +42,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
   const [calendarVisible, setCalendarVisible] = useState(false);
 
   // Browse Start Points
-  const [basicMode, setBasicMode] = useState(true);
+  const [basicMode, setBasicMode] = useState(false);
   const [dateTime, setDateTime] = useState(null);
   const [msgId, setMsgId] = useState('');
 
@@ -136,6 +136,14 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
   const handleRefreshClick = () => {
     raiseOnChange(browseMode);
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleRefreshClick();
+    }, 5 * 60 * 1000); // refresh every 5 minutes
+  
+    return () => clearInterval(interval); // clean if component is unmount
+  }, []);  
 
   return (
     <Toolbar className={classes.messageListToolbar}
