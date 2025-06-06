@@ -129,6 +129,8 @@ export default function MessageList({ sourceDefinition, browser, selectedMessage
           >
             <Column body={messageStatus} />
             <Column field="meta.msgId" header="Message ID" />
+            <Column field="headers.applicationMessageId" header="Application Message ID" body ={(rowData) => rowData.headers.applicationMessageId ?? 'Not Available' }/>
+            <Column field="headers.applicationMessageType" header="Application Message Type" body ={(rowData) => rowData.headers.applicationMessageType ?? 'Not Available' } />
             <Column body={formatDateTime} header="Spooled Time" />
             <Column field="meta.attachmentSize" header="Attachment Size (B)" />
           </DataTable>

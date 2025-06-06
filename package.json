@@ -21,6 +21,7 @@
     "primereact": "^10.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react18-json-view": "^0.2.9",
     "solace-queue-browser": "file:",
     "solclientjs": "^10.17.0",
     "superagent": "^10.0.1"
