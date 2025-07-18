@@ -37,6 +37,13 @@ export default function TreeView({ brokers, brokerEditor, onSourceSelected }) {
     const isEmpty = queue.msgSpoolUsage === 0;
     const isFull = (queue.msgSpoolUsage / queue.maxMsgSpoolUsage) > queue.eventMsgSpoolUsageThreshold.setPercent;
 
+    const isPartitionedNonExclusive = queue.accessType === 'non-exclusive' && queue.partitionCount > 0;
+    if (isPartitionedNonExclusive) {
+      return isLvq
+        ? <LvqIcon size="16" className="text-purple-500" />
+        : <QueueIcon size="16" className="text-purple-500" />;
+    }
+
     const iconColor = isEmpty ? '' : (!isLvq && isFull) ? 'text-red-500' : 'text-primary';
     return isLvq ?
       <LvqIcon size="16" className={iconColor} /> :
