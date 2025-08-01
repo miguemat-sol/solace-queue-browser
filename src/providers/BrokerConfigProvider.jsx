@@ -88,7 +88,7 @@ export function useBrokerConfig() {
       await session.connect();
       session.disconnect();
     } catch (err) {
-      console.error(err);
+      console.error("SMF Connection Error:", err);
 
       if(err.responseCode) switch(err.responseCode) {
         case 401:
@@ -132,6 +132,8 @@ export function useBrokerConfig() {
           return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SEMP: Unauthorized', detail: errorDetail }};
         case 403:
           return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SEMP: Forbidden', detail: errorDetail }};
+        default:
+          return { result: { connected: false, replay: false}, message: { severity:'error', summary: `SEMP: HTTP ${status}`, detail: errorDetail }};
       }
     };
 
@@ -139,10 +141,12 @@ export function useBrokerConfig() {
       const { response } = await sempClient.getMsgVpnReplayLogsWithHttpInfo(vpn, { select: ['replayLogName'] });
       return handleResponse(response);
     } catch (err) {
+      console.error("SEMP API Error:", err);
       if(err.status && err.response) {
-        return handleResponse(err.response);
+        const handledResponse = handleResponse(err.response);
+        if (handledResponse) return handledResponse;
+        return { result: { connected: false, replay: false}, message: { severity:'error', summary: `SEMP: HTTP ${err.status || 'Unknown Status'}`, detail: err.response?.body?.meta?.error?.description || err.message || 'Unknown error from SEMP API.' }};
       } else {
-        console.error(err);
         const errMsg = err.toString();
         
         if (

@@ -17,10 +17,13 @@ export function useSempApi(ApiCtor = AllApi) {
     getClient: (opts) => {
       const client = new ApiClient();
       const { useTls, hostName, sempPort, sempUsername, sempPassword } = opts;
-      Object.assign(client, { 
-        basePath: `${(useTls ? 'https': 'http')}://${hostName}:${sempPort}/SEMP/v2/monitor`
-      });
+
+      const protocol = useTls ? 'https' : 'http';
+      const dynamicBasePath = `/api/${protocol}/${hostName}:${sempPort}/SEMP/v2/monitor`;
+
+      Object.assign(client, { basePath: dynamicBasePath });
       Object.assign(client.authentications.basicAuth, { username: sempUsername, password: sempPassword });
+
       return new ApiCtor(client);
     }
   }
