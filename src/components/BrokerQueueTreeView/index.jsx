@@ -37,6 +37,13 @@ export default function TreeView({ brokers, brokerEditor, onSourceSelected }) {
     const isEmpty = queue.msgSpoolUsage === 0;
     const isFull = (queue.msgSpoolUsage / queue.maxMsgSpoolUsage) > queue.eventMsgSpoolUsageThreshold.setPercent;
 
+    const isPartitionedNonExclusive = queue.accessType === 'non-exclusive' && queue.partitionCount > 0;
+    if (isPartitionedNonExclusive) {
+      return isLvq
+        ? <LvqIcon size="16" className="text-purple-500" />
+        : <QueueIcon size="16" className="text-purple-500" />;
+    }
+
     const iconColor = isEmpty ? '' : (!isLvq && isFull) ? 'text-red-500' : 'text-primary';
     return isLvq ?
       <LvqIcon size="16" className={iconColor} /> :
@@ -137,8 +144,29 @@ export default function TreeView({ brokers, brokerEditor, onSourceSelected }) {
 
     if (type === 'queues' && config.testResult.connected) {
       setIsLoading(true);
-      const { data: queues } = await sempApi.getClient(config).getMsgVpnQueues(config.vpn, { count: 100 });
-      const queueNodeList = buildQueueNodeList(config, queues);
+      const sempClient = sempApi.getClient(config);
+      let allQueues = [];
+      let cursor = null;
+
+      do {
+        const params = { count: 100 };
+        if (cursor) {
+          params.cursor = cursor;
+        }
+        const response = await sempClient.getMsgVpnQueues(config.vpn, params);
+        allQueues = allQueues.concat(response.data || []);
+
+        // Check if there is pagination
+        const nextPageUri = response.meta?.paging?.nextPageUri;
+        if (nextPageUri) {
+          const parsedUrl = new URL(nextPageUri);
+          cursor = parsedUrl.searchParams.get('cursor');
+        } else {
+          cursor = null;
+        }
+      } while (cursor);
+
+      const queueNodeList = buildQueueNodeList(config, allQueues);
       setQueuesListMap(prev => ({ ...prev, [config.id]: queueNodeList }));
       setIsLoading(false);
     }

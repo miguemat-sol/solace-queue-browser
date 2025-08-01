@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
@@ -13,6 +13,7 @@ import classes from './styles.module.css';
 
 export default function MessageListToolbar({ sourceDefinition, minTime, maxTime, onChange }) {
   const { type: sourceType, sourceName, config: { id: brokerId } } = sourceDefinition;
+  const intervalRef = useRef(null);
 
   const [sourceLabel, browseModes] =
     (sourceType === SOURCE_TYPE.BASIC) ? [
@@ -110,6 +111,8 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
 
   const handleBrowseModeChange = ({ value: mode }) => {
     setBrowseMode(mode);
+    raiseOnChange(mode);
+    startRefreshInterval();
   };
 
   const handleCalendarVisibleChangle = async () => {
@@ -134,7 +137,21 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
 
   const handleRefreshClick = () => {
     raiseOnChange(browseMode);
+    startRefreshInterval();
   };
+
+  const startRefreshInterval = () => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      handleRefreshClick();
+    }, 30 * 1000); // refresh every 30 seconds
+  };
+
+  useEffect(() => {
+    startRefreshInterval();
+  
+    return () => clearInterval(intervalRef.current); // clean if component is unmount
+  }, []);  
 
   return (
     <Toolbar className={classes.messageListToolbar}
