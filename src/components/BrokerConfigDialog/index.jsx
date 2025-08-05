@@ -19,14 +19,14 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
     setValues({
       id: 0,
       displayName: '',
-      hostName: '',
-      clientPort: '',
-      sempPort: '',
-      useTls: false,
-      vpn: '',
-      clientUsername: '',
+      hostName: 'your-broker.messaging.solace.cloud',
+      clientPort: '443',
+      sempPort: '943',
+      useTls: true,
+      vpn: 'default',
+      clientUsername: 'default',
       clientPassword: '',
-      sempUsername: '',
+      sempUsername: 'admin',
       sempPassword: '',
       ...(config || {})
     });
@@ -98,7 +98,7 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
         </FloatLabel>
         <FloatLabel className={classes.formField}>
             <InputText id="hostName" className={classes.formInput} value={values.hostName} onChange={handleInputChange} />
-            <label htmlFor="hostName">Hostname</label>
+            <label htmlFor="hostName">Hostname or IP reachable</label>
         </FloatLabel>
         <div className={classes.formField} style={{display:'flex', gap: '0.6rem'}}>
           <FloatLabel style={{flex: 1}}>
