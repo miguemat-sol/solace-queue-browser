@@ -42,6 +42,8 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
 
   const handleSave = () => {
     brokerEditor.save(values);
+    if (values.displayName === "")
+      values.displayName = values.vpn;
     onHide?.();
   };
 
@@ -98,8 +100,13 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
         </FloatLabel>
         <FloatLabel className={classes.formField}>
             <InputText id="hostName" className={classes.formInput} value={values.hostName} onChange={handleInputChange} />
-            <label htmlFor="hostName">Hostname or IP reachable</label>
+            <label htmlFor="hostName">Hostname</label>
         </FloatLabel>
+        {visible && (
+          <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem', marginBottom: '1rem', paddingLeft: '0.2rem' }}>
+            ⚠️ Note: This application is hosted on an external server. "localhost" cannot be used to access it.
+          </div>
+        )}
         <div className={classes.formField} style={{display:'flex', gap: '0.6rem'}}>
           <FloatLabel style={{flex: 1}}>
               <InputText id="clientPort" className={classes.formInput} value={values.clientPort} onChange={handleInputChange} />
