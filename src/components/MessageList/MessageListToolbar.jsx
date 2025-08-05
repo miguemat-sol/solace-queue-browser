@@ -82,9 +82,17 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
     if (browseMode !== coercedBrowseMode) {
       setBrowseMode(coercedBrowseMode);
     }
-    // trigger a refresh automatically when source has changed
     raiseOnChange(coercedBrowseMode);
-  }, [brokerId, sourceType, sourceName]);
+
+    clearInterval(intervalRef.current);
+    // restart auto-refresh interval whenever the queue or search parameters change
+    intervalRef.current = setInterval(() => {
+      raiseOnChange(browseMode);
+    }, 30 * 1000); // refresh every 30 seconds
+  
+    return () => clearInterval(intervalRef.current);
+  }, [brokerId, sourceType, sourceName, browseMode, basicMode, dateTime, msgId]);
+
 
   const raiseOnChange = (browseMode) => {
     if (basicMode || basicSource) {
@@ -112,7 +120,6 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
   const handleBrowseModeChange = ({ value: mode }) => {
     setBrowseMode(mode);
     raiseOnChange(mode);
-    startRefreshInterval();
   };
 
   const handleCalendarVisibleChangle = async () => {
@@ -137,21 +144,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
 
   const handleRefreshClick = () => {
     raiseOnChange(browseMode);
-    startRefreshInterval();
   };
-
-  const startRefreshInterval = () => {
-    clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      handleRefreshClick();
-    }, 30 * 1000); // refresh every 30 seconds
-  };
-
-  useEffect(() => {
-    startRefreshInterval();
-  
-    return () => clearInterval(intervalRef.current); // clean if component is unmount
-  }, []);  
 
   return (
     <Toolbar className={classes.messageListToolbar}
