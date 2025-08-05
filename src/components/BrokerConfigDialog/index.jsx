@@ -19,14 +19,14 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
     setValues({
       id: 0,
       displayName: '',
-      hostName: '',
-      clientPort: '',
-      sempPort: '',
+      hostName: 'localhost',
+      clientPort: '8008',
+      sempPort: '8080',
       useTls: false,
-      vpn: '',
-      clientUsername: '',
+      vpn: 'default',
+      clientUsername: 'default',
       clientPassword: '',
-      sempUsername: '',
+      sempUsername: 'admin',
       sempPassword: '',
       ...(config || {})
     });
