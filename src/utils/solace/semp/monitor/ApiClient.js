@@ -20,7 +20,8 @@ export class ApiClient {
          * @type {String}
          * @default http://www.solace.com/SEMP/v2/monitor
          */
-        this.basePath = 'http://www.solace.com/SEMP/v2/monitor'.replace(/\/+$/, '');
+        this.basePath = "/solace-api";
+        this.basePath = this.basePath.replace(/\/+$/, '');
 
         /**
          * The authentication methods to be included for all API calls.

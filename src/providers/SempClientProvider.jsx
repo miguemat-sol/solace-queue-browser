@@ -17,9 +17,18 @@ export function useSempApi(ApiCtor = AllApi) {
     getClient: (opts) => {
       const client = new ApiClient();
       const { useTls, hostName, sempPort, sempUsername, sempPassword } = opts;
-      Object.assign(client, { 
-        basePath: `${(useTls ? 'https': 'http')}://${hostName}:${sempPort}/SEMP/v2/monitor`
-      });
+      const proxyBasePath = "/solace-api";
+      if (hostName === "localhost" || hostName === "127.0.0.1") {
+        Object.assign(client, {
+          basePath: `${(useTls ? 'https': 'http')}://${hostName}:${sempPort}/SEMP/v2/monitor`
+        });
+      } else if (proxyBasePath) {
+        Object.assign(client, { basePath: proxyBasePath });
+      } else {
+        Object.assign(client, {
+          basePath: `${(useTls ? 'https': 'http')}://${hostName}:${sempPort}/SEMP/v2/monitor`
+        });
+      }
       Object.assign(client.authentications.basicAuth, { username: sempUsername, password: sempPassword });
       return new ApiCtor(client);
     }

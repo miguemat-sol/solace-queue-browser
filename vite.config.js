@@ -18,6 +18,14 @@ export default defineConfig(async () => ({
       // 3. tell vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
+    proxy: {
+      '/solace-api': {
+        target: 'https://broker-url.messaging.solace.cloud:943/SEMP/v2/monitor',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/solace-api/, ''),
+        secure: false,
+      },
+    },
   },
   define: {
     'import.meta.env.BUILD_TIME': JSON.stringify(new Date().toISOString()),    
