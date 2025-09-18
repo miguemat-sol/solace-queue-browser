@@ -152,7 +152,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
       end={() =>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <label>From:</label>
-          <Dropdown value={browseMode} onChange={handleBrowseModeChange} options={browseModes} optionLabel="name" disabled={basicSource} />
+          <Dropdown value={browseMode} onChange={handleBrowseModeChange} options={browseModes} optionLabel="name" disabled={basicSource || basicMode} />
           {
             ([BROWSE_MODE.HEAD, BROWSE_MODE.BASIC].includes(browseMode)) ?
               <div style={{ display: 'flex', width: 188 }}>
