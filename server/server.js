@@ -52,8 +52,10 @@ const wsProxy = createProxyMiddleware('/api/ws', {
         }
         
         const hostport = parts[4];
+        const newTarget = `${parts[3]}://${hostport}`;
         req.proxyRequest.setHeader('Host', hostport);
-        return '/';
+        req.proxyRequest.path = '/';
+        return req.proxyRequest.path;
     },
     onProxyReq: (proxyReq, req, res) => {
         const originalHost = req.originalUrl.split('/')[4];
