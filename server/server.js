@@ -21,9 +21,10 @@ const sempProxy = createProxyMiddleware('/api/semp', {
     },
     pathRewrite: (path, req) => {
         const fullPath = req.originalUrl;
-        return fullPath.substring(fullPath.indexOf('/SEMP/v2/monitor'));
+        const subPath = fullPath.substring(fullPath.indexOf('/SEMP/v2/monitor'));
+        return subPath;
     },
-    onProxyReq: (proxyReq, req, res) => {
+    onProxyReq: (proxyReq, req) => {
         const originalHost = req.originalUrl.split('/')[4];
         proxyReq.setHeader('Host', originalHost);
         proxyReq.setHeader('User-Agent', 'solace-browser-client');
@@ -47,7 +48,10 @@ const wsProxy = createProxyMiddleware('/api/ws', {
         const hostport = parts[4];
         return `${protocol}://${hostport}`;
     },
-    onProxyReq: (proxyReq, req, res) => {
+    pathRewrite: (path, req) => {
+        return '';
+    },
+    onProxyReq: (proxyReq, req) => {
         const originalHost = req.originalUrl.split('/')[4];
         proxyReq.setHeader('Host', originalHost);
         proxyReq.setHeader('User-Agent', 'solace-browser-client');
