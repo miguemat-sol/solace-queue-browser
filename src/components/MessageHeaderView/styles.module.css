@@ -3,3 +3,19 @@
   word-break: break-all;
   font-size: small;
 }
+
+:global(.json-view--pair:hover .json-view--copy) {
+  color: #fff;
+}
+
+:global(.json-view .json-view--copy:hover) {
+  color: #fff;
+}
+
+:global(.json-view .jv-chevron) {
+  color: #fff;
+}
+
+:global(.json-view .jv-button) {
+  color: #fff;
+}
