@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -14,28 +14,40 @@ import classes from './styles.module.css';
 
 export default function MessageList({ sourceDefinition, browser, selectedMessage, onBrowseFromChange, onMessageSelect }) {
   const { sourceName } = sourceDefinition;
-  const [replayLogTimeRange, setReplayLogTimeRange] = useState({ });
+  const [replayLogTimeRange, setReplayLogTimeRange] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [allMessages, setAllMessages] = useState([]);
   const [messages, setMessages] = useState([]);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
   });
 
-  const loadMessages = async (loader) => {
+  const loadMessages = async (loader, page = 'first') => {
     setIsLoading(true);
     try {
-      setMessages(await loader());
+      const msgs = await loader();
+      setAllMessages((prev) => {
+        const merged = [...prev];
+        msgs.forEach((m) => {
+          if (!merged.some((x) => x.meta?.replicationGroupMsgId === m.meta?.replicationGroupMsgId)) {
+            merged.push(m);
+          }
+        });
+        return merged;
+      });
+      setMessages(msgs);
     } catch (err) {
-      console.error('Error loding messages', err);
-      setMessages([]); // TODO: also show error toast notification?
+      console.error('Error loading messages', err);
+      setMessages([]);
     }
     setIsLoading(false);
   };
 
   useEffect(() => {
-    browser.getReplayTimeRange().then(range => setReplayLogTimeRange(range));
+    browser.getReplayTimeRange().then((range) => setReplayLogTimeRange(range));
     setMessages([]);
+    setAllMessages([]);
     loadMessages(() => browser.getFirstPage());
   }, [browser]);
 

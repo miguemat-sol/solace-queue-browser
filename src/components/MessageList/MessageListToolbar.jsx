@@ -83,14 +83,6 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
       setBrowseMode(coercedBrowseMode);
     }
     raiseOnChange(coercedBrowseMode);
-
-    clearInterval(intervalRef.current);
-    // restart auto-refresh interval whenever the queue or search parameters change
-    intervalRef.current = setInterval(() => {
-      raiseOnChange(browseMode);
-    }, 30 * 1000); // refresh every 30 seconds
-  
-    return () => clearInterval(intervalRef.current);
   }, [brokerId, sourceType, sourceName, browseMode, basicMode, dateTime, msgId]);
 
 
