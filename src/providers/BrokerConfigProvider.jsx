@@ -77,8 +77,14 @@ export function useBrokerConfig() {
     const { vpn, useTls, hostName, clientPort, clientUsername, clientPassword } = config;
 
     try {
+      let urlBroker;
+      if (useTls) {
+        urlBroker = `wss://${hostName}:${clientPort}`;
+      } else {
+        urlBroker = `wss://${window.location.host}/ws/${hostName}:${clientPort}`;
+      }
       const session = solace.SolclientFactory.createAsyncSession({
-        url: `wss://${window.location.host}/ws/${useTls ? 'wss' : 'ws'}/${hostName}:${clientPort}`,
+        urlBroker,
         vpnName: vpn,
         userName: clientUsername,
         password: clientPassword,
