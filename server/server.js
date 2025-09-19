@@ -12,19 +12,16 @@ const sempProxy = createProxyMiddleware('/api/semp', {
     target: 'http://localhost',
     changeOrigin: true,
     secure: false,
-    pathRewrite: (path, req) => {
+    router: (req) => {
         const fullPath = req.originalUrl;
         const parts = fullPath.split('/');
-        if (parts.length < 5 || !parts[3] || !parts[4]) {
-            console.error('Invalid URL for SEMP proxy:', fullPath);
-            return res.status(400).send('Bad Request: Invalid URL format for SEMP proxy.');
-        }
-
+        const protocol = parts[3];
         const hostport = parts[4];
-        const newTarget = `${parts[3]}://${hostport}`;
-        req.proxyRequest.setHeader('Host', hostport);
-        req.proxyRequest.path = fullPath.substring(fullPath.indexOf('/SEMP/v2/monitor'));
-        return req.proxyRequest.path;
+        return `${protocol}://${hostport}`;
+    },
+    pathRewrite: (path, req) => {
+        const fullPath = req.originalUrl;
+        return fullPath.substring(fullPath.indexOf('/SEMP/v2/monitor'));
     },
     onProxyReq: (proxyReq, req, res) => {
         const originalHost = req.originalUrl.split('/')[4];
@@ -43,19 +40,12 @@ const wsProxy = createProxyMiddleware('/api/ws', {
     ws: true,
     changeOrigin: true,
     secure: false,
-    pathRewrite: (path, req) => {
+    router: (req) => {
         const fullPath = req.originalUrl;
         const parts = fullPath.split('/');
-        if (parts.length < 5 || !parts[3] || !parts[4]) {
-            console.error('Invalid URL for WS proxy:', fullPath);
-            return res.status(400).send('Bad Request: Invalid URL format for WS proxy.');
-        }
-        
+        const protocol = parts[3];
         const hostport = parts[4];
-        const newTarget = `${parts[3]}://${hostport}`;
-        req.proxyRequest.setHeader('Host', hostport);
-        req.proxyRequest.path = '/';
-        return req.proxyRequest.path;
+        return `${protocol}://${hostport}`;
     },
     onProxyReq: (proxyReq, req, res) => {
         const originalHost = req.originalUrl.split('/')[4];
