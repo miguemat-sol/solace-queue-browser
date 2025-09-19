@@ -7,6 +7,31 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 
+// Middleware for web socket
+app.use('/ws/*', (req, res, next) => {
+  const fullOriginalPath = req.originalUrl;
+  const parts = fullOriginalPath.split('/');
+
+  if (parts.length < 4 || !parts[2] || !parts[3]) {
+    console.error('Invalid WebSocket proxy URL:', fullOriginalPath);
+    return res.status(400).send('Bad Request: Expected /ws/{protocol}/{host}:{port}');
+  }
+
+  const protocol = parts[2];
+  const hostport = parts[3];
+  const targetUrl = `${protocol}://${hostport}`;
+
+  console.log(`WebSocket proxy → ${targetUrl}`);
+
+  createProxyMiddleware({
+    target: targetUrl,
+    changeOrigin: true,
+    ws: true,
+    secure: false,
+    logLevel: 'debug'
+  })(req, res, next);
+});
+
 // Middleware for Solace dynamic proxy
 app.use('/*', (req, res, next) => {
     const fullOriginalPath = req.originalUrl;
