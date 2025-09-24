@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { FilterMatchMode } from 'primereact/api';
+import { Toast } from 'primereact/toast'
 
 import MessageListToolbar from './MessageListToolbar';
 
@@ -22,6 +23,7 @@ export default function MessageList({ sourceDefinition, browser, selectedMessage
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
   });
+  const toast = useRef(null);
 
   const loadMessages = async (loader, page = 'first') => {
     setIsLoading(true);
@@ -38,7 +40,7 @@ export default function MessageList({ sourceDefinition, browser, selectedMessage
       });
       setMessages(msgs);
     } catch (err) {
-      console.error('Error loading messages', err);
+      toast.current.show({ severity: 'error', summary: 'Error', detail: 'Error loading messages' });
       setMessages([]);
     }
     setIsLoading(false);
@@ -119,6 +121,8 @@ export default function MessageList({ sourceDefinition, browser, selectedMessage
 
   return (
     (sourceName) ? (
+      <>
+      <Toast ref={toast} />
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
         <MessageListToolbar sourceDefinition={sourceDefinition} minTime={replayLogTimeRange.min} maxTime={replayLogTimeRange.max} onChange={onBrowseFromChange} />
         <div style={{ flex: '1', overflow: 'hidden' }}>
@@ -146,6 +150,7 @@ export default function MessageList({ sourceDefinition, browser, selectedMessage
           </DataTable>
         </div>
       </div>
+      </>
     ) : (
       <div style={{ margin: '1em' }}>Please select a queue or topic to browse.</div>
     )

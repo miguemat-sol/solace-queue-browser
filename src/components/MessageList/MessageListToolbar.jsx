@@ -6,6 +6,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
+import { Toast } from 'primereact/toast'
 
 import { SOURCE_TYPE, BROWSE_MODE, SUPPORTED_BROWSE_MODES, MESSAGE_ORDER } from '../../hooks/solace';
 
@@ -14,6 +15,7 @@ import classes from './styles.module.css';
 export default function MessageListToolbar({ sourceDefinition, minTime, maxTime, onChange }) {
   const { type: sourceType, sourceName, config: { id: brokerId } } = sourceDefinition;
   const intervalRef = useRef(null);
+  const toast = useRef(null);
 
   const [sourceLabel, browseModes] =
     (sourceType === SOURCE_TYPE.BASIC) ? [
@@ -54,7 +56,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
       const fromTime = dateTime ? Math.floor(Date.parse(dateTime) / 1000) : null;
       return ({ fromTime });
     } catch {
-      console.error('Invalid date format'); //TODO: send toast notification
+      toast.current.show({ severity: 'error', summary: 'Error', detail: 'Invalid date format' });
       return ({ fromTime: null });
     }
   }
@@ -66,7 +68,7 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
         window.parseInt(msgId);
       return ((fromMsgId > 0) ? { fromMsgId } : { fromTime: null });
     } catch {
-      console.error('Invalid message id'); //TODO: send toast notification
+      toast.current.show({ severity: 'error', summary: 'Error', detail: 'Invalid message ID' });
       return ({ fromTime: null });
     }
   }
@@ -139,6 +141,8 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
   };
 
   return (
+    <>
+    <Toast ref={toast} />
     <Toolbar className={classes.messageListToolbar}
       start={() => <h3>{sourceLabel} | {sourceName}</h3>}
       end={() =>
@@ -164,5 +168,6 @@ export default function MessageListToolbar({ sourceDefinition, minTime, maxTime,
           <Button onClick={handleRefreshClick} size="small">Refresh</Button>
         </div>}
     />
+    </>
   );
 }
