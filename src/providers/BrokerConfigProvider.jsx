@@ -73,18 +73,11 @@ export function useBrokerConfig() {
   };
 
   const testBroker = async (config) => {
-    // TODO: consider a solace.with(config)
     const { vpn, useTls, hostName, clientPort, clientUsername, clientPassword } = config;
 
     try {
-      let urlBroker;
-      if (useTls) {
-        urlBroker = `wss://${hostName}:${clientPort}`;
-      } else {
-        urlBroker = `wss://${window.location.host}/ws/${hostName}:${clientPort}`;
-      }
       const session = solace.SolclientFactory.createAsyncSession({
-        url: urlBroker,
+        url: `${(useTls ? 'wss' : 'ws')}://${hostName}:${clientPort}`,
         vpnName: vpn,
         userName: clientUsername,
         password: clientPassword,
@@ -94,23 +87,23 @@ export function useBrokerConfig() {
       await session.connect();
       session.disconnect();
     } catch (err) {
-      console.error("SMF Connection Error:", err);
+      console.error(err);
 
       if(err.responseCode) switch(err.responseCode) {
         case 401:
-          return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SMF: Unauthorized', detail: 'Incorrect client username or password.' }};
+          return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SMF: Unauthorized', detail: 'Incorrect client username or password.' }]};
       }
       
       const errMsg = err.message;
 
       if (errMsg.includes('invalid URL')) {
-        return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SMF: Failure', detail: 'Invalid broker URL.'}};
+        return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SMF: Failure', detail: 'Invalid broker URL. The hostname is unreachable.'}]};
       }
       if (errMsg.includes('Connection error')) {
-        return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SMF: Failure', detail: 'General connection error.'}};
+        return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SMF: Failure', detail: 'Please ensure you have a valid client certificate configured. Also, check Firewall/Proxy settings.'}]};
       }
 
-      return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SMF: Connection Error', detail: 'Unknown error!' }};    
+      return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SMF: Connection Error', detail: 'Unknown error!' }]};    
     }
 
     const sempClient = sempApi.getClient(config);
@@ -128,18 +121,25 @@ export function useBrokerConfig() {
       switch (status) {
         case 200:
           if (body.data.length > 0) {
-            return { result: { connected: true, replay: true}, message: { severity:'info', summary: 'Success', detail: 'Broker connection succeeded.' }};
+            return {
+              result: { connected: true, replay: true },
+              messages: [{ severity: 'info', summary: 'Success', detail: 'Broker connection succeeded.' }]
+            };
           } else {
-            return { result: { connected: true, replay: false}, message: { severity:'warn', summary: 'Warning', detail: 'Replay Log not enabled on broker.' }};
+            return {
+              result: { connected: true, replay: false },
+              messages: [
+                { severity: 'info', summary: 'Success', detail: 'Broker connection succeeded.' },
+                { severity: 'warn', summary: 'Warning', detail: 'Replay Log not enabled on broker.' }
+              ]
+            };
           }
         case 400:
-          return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SEMP: Bad Request', detail: errorDetail }};
+          return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SEMP: Bad Request', detail: errorDetail }]};
         case 401:
-          return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SEMP: Unauthorized', detail: errorDetail }};
+          return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SEMP: Unauthorized', detail: errorDetail }]};
         case 403:
-          return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SEMP: Forbidden', detail: errorDetail }};
-        default:
-          return { result: { connected: false, replay: false}, message: { severity:'error', summary: `SEMP: HTTP ${status}`, detail: errorDetail }};
+          return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SEMP: Forbidden', detail: errorDetail }]};
       }
     };
 
@@ -147,29 +147,27 @@ export function useBrokerConfig() {
       const { response } = await sempClient.getMsgVpnReplayLogsWithHttpInfo(vpn, { select: ['replayLogName'] });
       return handleResponse(response);
     } catch (err) {
-      console.error("SEMP API Error:", err);
       if(err.status && err.response) {
-        const handledResponse = handleResponse(err.response);
-        if (handledResponse) return handledResponse;
-        return { result: { connected: false, replay: false}, message: { severity:'error', summary: `SEMP: HTTP ${err.status || 'Unknown Status'}`, detail: err.response?.body?.meta?.error?.description || err.message || 'Unknown error from SEMP API.' }};
+        return handleResponse(err.response);
       } else {
+        console.error(err);
         const errMsg = err.toString();
         
         if (
           errMsg.includes('Invalid URL') ||
           errMsg.includes('expected empty host')
         ) {
-          return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SEMP: Failure', detail: 'Invalid broker URL.' }};
+          return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SEMP: Failure', detail: 'Invalid broker URL.' }]};
         }
         
         if (
           errMsg.includes('Network Error') ||
           errMsg.includes('Request has been terminated')
         ) {
-          return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SEMP: Failure', detail: 'Broker service unreachable.' }}
+          return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SEMP: Failure', detail: 'Broker service unreachable.' }]}
         }
       }
-      return { result: { connected: false, replay: false}, message: { severity:'error', summary: 'SEMP: Failure', detail: 'Unknown error!' }};
+      return { result: { connected: false, replay: false}, messages: [{ severity:'error', summary: 'SEMP: Failure', detail: 'Unknown error!' }]};
     }
   };
 

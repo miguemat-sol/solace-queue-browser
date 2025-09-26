@@ -19,10 +19,10 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
     setValues({
       id: 0,
       displayName: '',
-      hostName: 'your-broker.messaging.solace.cloud',
-      clientPort: '443',
-      sempPort: '943',
-      useTls: true,
+      hostName: 'localhost',
+      clientPort: '8008',
+      sempPort: '8080',
+      useTls: false,
       vpn: 'default',
       clientUsername: 'default',
       clientPassword: '',
@@ -57,8 +57,8 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
   }
 
   const handleTestConnection = async () => {
-    const { message } = await brokerEditor.test(values);
-    toast.current.show(message);
+    const { messages } = await brokerEditor.test(values);
+    messages.forEach(msg => toast.current.show(msg));
   }
 
   const Header = () => (
@@ -94,11 +94,6 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
     >
       <Toast ref={toast} />
       <form autoComplete="off">
-        {visible && (
-          <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem', marginBottom: '0.2rem', paddingLeft: '0.2rem' }}>
-            ⚠️ Note: For a better experience, enabling ReplayLog is highly recommended.
-          </div>
-        )}
         <FloatLabel className={classes.formField}>
           <InputText id="displayName" className={classes.formInput} value={values.displayName} onChange={handleInputChange} />
           <label htmlFor="displayName">Display Name</label>
@@ -109,7 +104,7 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
         </FloatLabel>
         {visible && (
           <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem', marginBottom: '1rem', paddingLeft: '0.2rem' }}>
-            Note: This application is hosted on an external server. "localhost" cannot be used to access it.
+            ⚠️ Note: This application runs on localhost. To connect to a remote broker using TLS, you must use the deployed web version.
           </div>
         )}
         <div className={classes.formField} style={{display:'flex', gap: '0.6rem'}}>
@@ -122,15 +117,10 @@ export default function BrokerConfigDialog( { config, brokerEditor, onHide }) {
               <label htmlFor="sempPort">SEMP Port</label>
           </FloatLabel>
           <div style={{flex: 1}}>
-            <Checkbox id="useTls" onChange={handleInputChange} disabled={true} checked={values.useTls} style={{height:'100%', paddingTop:'0.5rem'}}/>
+            <Checkbox id="useTls" onChange={handleInputChange} checked={values.useTls} style={{height:'100%', paddingTop:'0.5rem'}}/>
             <label htmlFor="useTls" className={classes.checkboxLabel}>Use TLS</label>
           </div>
         </div>
-        {visible && (
-          <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem', marginBottom: '1rem', paddingLeft: '0.2rem' }}>
-            Note: Due to security and modern browser compatibility, the app only supports encrypted connections.
-          </div>
-        )}
         <FloatLabel className={classes.formField}>
             <InputText id="vpn" className={classes.formInput} value={values.vpn} onChange={handleInputChange} />
             <label htmlFor="vpn">VPN</label>

@@ -444,6 +444,10 @@ class BasicQueueBrowser extends BaseBrowser {
     this.didReadMessages = false;
   }
 
+  hasPrevPage() {
+    return false;
+  }
+
   async open() {
     const { sourceName: queueName } = this.sourceDefinition;
 
@@ -457,8 +461,7 @@ class BasicQueueBrowser extends BaseBrowser {
     this.queueBrowser = this.session.createQueueBrowser({ queueDescriptor });
     await this.queueBrowser.connect();
     this.assertState(BROWSER_STATE.OPENING);
-    this.nextPage = true;
-
+    this.nextPage = { basic: true };
     this.state = BROWSER_STATE.OPEN;
   }
   async close() {
@@ -476,8 +479,10 @@ class BasicQueueBrowser extends BaseBrowser {
     const messages = await this.queueBrowser.readMessages(this.pageSize, 500);
 
     if (messages.length === 0) {
+      this.nextPage = null;
       return [];
     }
+
     const fromMsgId = messages[0].getGuaranteedMessageId()?.low;
     const msgMetaData =
       await this.getMessageMetaData({
@@ -486,8 +491,11 @@ class BasicQueueBrowser extends BaseBrowser {
         direction: MESSAGE_ORDER.OLDEST,
         count: messages.length
       });
-    
+
+    this.prevPages.push({ fromMsgId });
     this.didReadMessages = true;
+    
+    this.nextPage = (messages.length < this.pageSize) ? null : { basic: true };
     return this.merge({ messages, msgMetaData });
   }
 
